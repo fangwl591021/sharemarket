@@ -16,7 +16,27 @@
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sharemarket-media" }],
   "env": {
-    "staging": { "name": "sharemarket-staging", "vars": { "ENVIRONMENT": "staging", "TURNSTILE_SITE_KEY": "" } },
-    "production": { "name": "sharemarket", "vars": { "ENVIRONMENT": "production", "TURNSTILE_SITE_KEY": "" } }
+    "staging": {
+      "name": "sharemarket-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "sharemarket-staging-db",
+          "database_id": "0d8ac253-28d9-4218-8dad-f508380f0467",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "sharemarket-staging-media" }
+      ]
+    },
+    "production": {
+      "name": "sharemarket",
+      "vars": { "ENVIRONMENT": "production", "TURNSTILE_SITE_KEY": "" }
+    }
   }
 }
