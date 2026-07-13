@@ -56,7 +56,8 @@ npx wrangler secret put SETUP_TOKEN
 4. 建立 Turnstile widget，將 site key 放入環境 `vars.TURNSTILE_SITE_KEY`。
 5. `npx wrangler secret put TURNSTILE_SECRET_KEY --env staging`（production 同理）。
 6. `npx wrangler secret put SETUP_TOKEN --env staging`（production 同理）。
-7. 遠端 migration：`npx wrangler d1 migrations apply DB --env staging --remote`。
+7. `npx wrangler secret put PASSWORD_PEPPER --env staging`（production 使用獨立的 32 字元以上亂數）。
+8. 遠端 migration：`npx wrangler d1 migrations apply DB --env staging --remote`。
 
 Turnstile 在 `ENVIRONMENT=development` 且沒有 secret 時可略過，staging／production 未設定 secret 會拒絕註冊。Turnstile client token 一律由 Worker 呼叫 Siteverify 驗證。
 
@@ -86,6 +87,7 @@ npm run check
 - 先部署 staging，完成 migration 與驗收後才可部署 production。
 - 本專案不會自動執行正式 deploy。
 - Session Cookie 使用 `Secure; HttpOnly; SameSite=Lax`；變更 API 另檢查 CSRF token。
+- 密碼使用隨機 salt 與 Secret pepper 的 HMAC-SHA256；pepper 不進入 Git 或 D1。
 - 頁面事件只保存 `dealer_id`、`slug`、事件種類與時間，不保存 IP、電話或瀏覽內容。
 
 ## 已刻意延後

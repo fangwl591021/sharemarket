@@ -13,7 +13,7 @@ async function attemptLogin(env: Env, table: "dealers" | "admin_users", lookup: 
   const row = await env.DB.prepare(`SELECT ${idCol} id,password_hash,status,failed_login_count,locked_until${extra} FROM ${table} WHERE ${where}`).bind(lookup).first<LoginRow>();
   if (!row || row.status !== "active" || (row.expires_at && row.expires_at <= new Date().toISOString())) return null;
   if (row.locked_until && row.locked_until > new Date().toISOString()) throw new Error("登入暫時鎖定，請稍後再試");
-  if (!(await verifyPassword(password, row.password_hash))) {
+  if (!(await verifyPassword(password, row.password_hash, env.PASSWORD_PEPPER))) {
     const failures = row.failed_login_count + 1;
     const locked = failures >= 5 ? new Date(Date.now() + 15 * 60_000).toISOString() : null;
     await env.DB.prepare(`UPDATE ${table} SET failed_login_count=?,locked_until=? WHERE ${idCol}=?`).bind(failures >= 5 ? 0 : failures, locked, row.id).run();
@@ -58,8 +58,8 @@ export async function changePassword(request: Request, env: Env): Promise<Respon
   const body = await bodyJson(request), current = String(body.current_password ?? ""), next = String(body.new_password ?? "");
   if (!strongPassword(next)) return error("新密碼至少 10 碼，且需包含英文字母與數字");
   const row = await env.DB.prepare("SELECT password_hash FROM dealers WHERE dealer_id=?").bind(session.actor_id).first<{ password_hash: string }>();
-  if (!row || !(await verifyPassword(current, row.password_hash))) return error("目前密碼錯誤", 403);
-  await env.DB.prepare("UPDATE dealers SET password_hash=?,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE dealer_id=?").bind(await hashPassword(next), session.actor_id).run();
+  if (!row || !(await verifyPassword(current, row.password_hash, env.PASSWORD_PEPPER))) return error("目前密碼錯誤", 403);
+  await env.DB.prepare("UPDATE dealers SET password_hash=?,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE dealer_id=?").bind(await hashPassword(next, env.PASSWORD_PEPPER), session.actor_id).run();
   await audit(env, "dealer", session.actor_id, "dealer.password_changed");
   return json({ ok: true });
 }

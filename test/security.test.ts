@@ -3,14 +3,18 @@ import { hashPassword, secureEqual, verifyPassword } from "../src/services/secur
 import { normalizePhone, strongPassword, validSlug } from "../src/services/validation";
 
 describe("password security", () => {
-  it("hashes with a random salt and verifies without storing plaintext", async () => {
-    const first = await hashPassword("SecurePass123");
-    const second = await hashPassword("SecurePass123");
+  const pepper = "test-pepper-value-that-is-at-least-32-characters";
+
+  it("uses a random salt and a server-side pepper without storing plaintext", async () => {
+    const first = await hashPassword("SecurePass123", pepper);
+    const second = await hashPassword("SecurePass123", pepper);
     expect(first).not.toBe(second);
     expect(first).not.toContain("SecurePass123");
-    expect(await verifyPassword("SecurePass123", first)).toBe(true);
-    expect(await verifyPassword("wrong", first)).toBe(false);
+    expect(await verifyPassword("SecurePass123", first, pepper)).toBe(true);
+    expect(await verifyPassword("wrong", first, pepper)).toBe(false);
+    expect(await verifyPassword("SecurePass123", first, "wrong-pepper-value-that-is-at-least-32-characters")).toBe(false);
   });
+
   it("compares setup tokens and validates strong passwords", () => {
     expect(secureEqual("same-token", "same-token")).toBe(true);
     expect(secureEqual("same-token", "other-token")).toBe(false);

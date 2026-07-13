@@ -16,7 +16,7 @@ export async function setup(request: Request, env: Env): Promise<Response> {
   const b = await bodyJson(request), email = String(b.email ?? "").trim().toLowerCase(), password = String(b.password ?? ""), name = String(b.display_name ?? "管理員").trim();
   if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 12 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return error("請提供有效 Email，密碼至少 12 碼且包含英文與數字");
   const id = crypto.randomUUID();
-  await env.DB.prepare("INSERT INTO admin_users(admin_id,email,display_name,password_hash,role) VALUES(?,?,?,?, 'super_admin')").bind(id, email, name, await hashPassword(password)).run();
+  await env.DB.prepare("INSERT INTO admin_users(admin_id,email,display_name,password_hash,role) VALUES(?,?,?,?, 'super_admin')").bind(id, email, name, await hashPassword(password, env.PASSWORD_PEPPER)).run();
   await audit(env, "admin", id, "admin.initialized", "admin", id);
   return json({ ok: true }, 201);
 }
@@ -52,7 +52,7 @@ export async function reviewApplication(request: Request, env: Env, applicationI
   if (app.referrer_code) referrerId = (await env.DB.prepare("SELECT dealer_id FROM dealers WHERE slug=?").bind(app.referrer_code).first<{dealer_id:string}>())?.dealer_id ?? null;
   const dealerId=crypto.randomUUID(), initial=app.birth_date.replaceAll("-","");
   const statements = [
-    env.DB.prepare("INSERT INTO dealers(dealer_id,application_id,slug,mobile_normalized,password_hash,referrer_dealer_id) VALUES(?,?,?,?,?,?)").bind(dealerId,applicationId,slug,app.mobile_normalized,await hashPassword(initial),referrerId),
+    env.DB.prepare("INSERT INTO dealers(dealer_id,application_id,slug,mobile_normalized,password_hash,referrer_dealer_id) VALUES(?,?,?,?,?,?)").bind(dealerId,applicationId,slug,app.mobile_normalized,await hashPassword(initial, env.PASSWORD_PEPPER),referrerId),
     env.DB.prepare("INSERT INTO dealer_profiles(dealer_id,display_name,city,industry,phone,field_visibility) VALUES(?,?,?,?,?,?)").bind(dealerId,app.real_name,app.city,app.industry,app.mobile_normalized,JSON.stringify({phone:true,email:true,address:true,map_url:true,booking_url:true})),
     env.DB.prepare("INSERT INTO dealer_social_links(dealer_id,link_visibility) VALUES(?,?)").bind(dealerId,JSON.stringify({facebook_url:true,line_url:true,instagram_url:true,website_url:true,threads_url:true,youtube_url:true})),
     env.DB.prepare("UPDATE dealer_applications SET status='approved',review_note=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE application_id=?").bind(note,session.actor_id,applicationId),
@@ -83,7 +83,7 @@ export async function updateDealer(request: Request, env: Env, dealerId: string)
 export async function resetPassword(request: Request,env:Env,dealerId:string):Promise<Response>{
   const session=await adminSession(request,env,true);if(!session)return error("未登入或安全驗證失敗",403);
   const row=await env.DB.prepare("SELECT a.birth_date FROM dealers d JOIN dealer_applications a ON a.application_id=d.application_id WHERE d.dealer_id=?").bind(dealerId).first<{birth_date:string}>();if(!row)return error("找不到原始申請資料",404);
-  await env.DB.prepare("UPDATE dealers SET password_hash=?,must_change_password=1,failed_login_count=0,locked_until=NULL,updated_at=CURRENT_TIMESTAMP WHERE dealer_id=?").bind(await hashPassword(row.birth_date.replaceAll("-","")),dealerId).run();
+  await env.DB.prepare("UPDATE dealers SET password_hash=?,must_change_password=1,failed_login_count=0,locked_until=NULL,updated_at=CURRENT_TIMESTAMP WHERE dealer_id=?").bind(await hashPassword(row.birth_date.replaceAll("-",""), env.PASSWORD_PEPPER),dealerId).run();
   await env.DB.prepare("DELETE FROM sessions WHERE actor_type='dealer' AND actor_id=?").bind(dealerId).run();await audit(env,"admin",session.actor_id,"dealer.password_reset","dealer",dealerId);return json({ok:true});
 }
 

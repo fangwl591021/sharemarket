@@ -5,6 +5,7 @@ export interface Env {
   SETUP_TOKEN?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
+  PASSWORD_PEPPER?: string;
 }
 
 export type ActorType = "admin" | "dealer";
