@@ -31,7 +31,7 @@ export async function dashboard(request: Request, env: Env): Promise<Response> {
 
 export async function applications(request: Request, env: Env): Promise<Response> {
   if (!(await adminSession(request, env))) return error("未登入", 401);
-  const items = (await env.DB.prepare("SELECT * FROM dealer_applications ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'returned' THEN 1 ELSE 2 END,created_at DESC LIMIT 200").all()).results;
+  const items = (await env.DB.prepare("SELECT a.*,d.slug AS approved_slug FROM dealer_applications a LEFT JOIN dealers d ON d.application_id=a.application_id ORDER BY CASE a.status WHEN 'pending' THEN 0 WHEN 'returned' THEN 1 ELSE 2 END,a.created_at DESC LIMIT 200").all()).results;
   return json({ items });
 }
 
