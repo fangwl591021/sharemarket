@@ -1,6 +1,7 @@
 import type { Env } from "./types";
 import { error, html, json } from "./http";
-import { adminPage, publicPage } from "./templates/admin-public";
+import { adminPage } from "./templates/admin-public";
+import { publicPage } from "./templates/public-story";
 import { dashboardPage, loginPage, registerPage } from "./templates/pages";
 import { adminLogin, changePassword, dealerLogin, logout, sessionInfo } from "./routes/auth";
 import { register } from "./routes/register";
