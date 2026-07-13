@@ -6,7 +6,7 @@ const css = `
 @media(max-width:760px){.menu a:not(.btn){display:none}.hero{padding:54px 0 42px}.heroGrid,.grid3,.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.section{padding:48px 0}.bottom{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:30;background:#fff;border-top:1px solid var(--line);padding:8px;gap:7px}.bottom a{flex:1;text-align:center;font-size:13px;padding:9px 4px;border-radius:8px;background:var(--navy);color:#fff;text-decoration:none}.footer{padding-bottom:88px}.panel{padding:16px;overflow-x:auto}.wrap{width:min(100% - 24px,1120px)}}`;
 
 function document(title: string, body: string, script = ""): string {
-  return `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="共享會員市場"><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${body}${script ? `<script>${script}</script>` : ""}</body></html>`;
+  return `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="共享會員市場"><title>${escapeHtml(title)}</title><link rel="icon" href="/favicon.ico?v=2"><style>${css}</style></head><body>${body}${script ? `<script>${script}</script>` : ""}</body></html>`;
 }
 
 const apiHelpers = `
