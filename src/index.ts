@@ -40,6 +40,7 @@ async function media(env:Env,key:string):Promise<Response>{const obj=await env.M
 
 async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url=new URL(request.url), path=decodeURIComponent(url.pathname), method=request.method;
+  if(method==="GET"&&path==="/favicon.ico")return new Response(null,{status:204,headers:{"Cache-Control":"public, max-age=86400"}});
   if(method==="GET"&&path==="/health")return json({ok:true,service:"sharemarket"});
   if(method==="GET"&&path==="/")return publicResponse(env,null,ctx);
   if(method==="GET"&&path==="/register")return html(registerPage(env.TURNSTILE_SITE_KEY));
